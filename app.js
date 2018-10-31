@@ -1,5 +1,4 @@
 (function(document) {
-    
   document.addEventListener("DOMContentLoaded", () =>
     makeDomElelemts(document)
   );
@@ -43,6 +42,14 @@
     return false;
   };
 
+  const createFotter = () => {
+    var div = document.createElement("div");
+    div.style.background = "lightgray";
+    div.style.width = "100%";
+    div.style.height = "400px";
+    document.body.appendChild(div);
+  };
+
   const makeDomElelemts = document => {
     let bodyEl;
     try {
@@ -52,9 +59,8 @@
     }
     if (bodyEl) {
       let obj = getNodeTree(bodyEl);
-      debugger;
       console.log(obj);
-
+      createFotter();
       //     body[0].forEach(function(node) {
       //       // Do whatever you want with the node object.
       //       console.log(node);
