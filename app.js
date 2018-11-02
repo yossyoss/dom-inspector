@@ -48,73 +48,68 @@
     container.classList.add("di-container");
     container.style.background = "lightgray";
     container.style.width = "100%";
-    container.style.padding = "20px";
-    //container.style.height = "300px";
+    container.style.height = "300px";
+    container.style.fontSize = "x-small";
+    container.style.border = "1px solid black";
     container.style.display = "flex";
     document.body.appendChild(container);
   };
 
-  //   const createDomInspectorWrapper = () => {
-  //     const div = document.createElement("div");
-  //     div.classList.add("di-wrapper");
-  //     div.innerHTML = "body";
-  //     div.style.minWidth = "30px";
-  //     div.style.minHeight = "30px";
-  //     div.style.background = "#dc8f8f";
-  //     div.style.display = "flex";
-  //     div.style.padding = "10px";
-  //     const diContainer = document.querySelector(".di-container");
-  //     diContainer.appendChild(div);
-  //   };
+  const createDomInspectoBody = bodyEl => {
+    let diClass = document.querySelector(".di-container");
+    let newEl = createSingleBox(bodyEl[0]);
+    newEl.classList.add("di-body");
+    newEl.style.display = "flex";
+    newEl.style.border = "1px solid black";
+    diClass.appendChild(newEl);
+  };
 
-  const createSingleElementBox = el => {
-    //console.log(el);
-
+  const createSingleBox = el => {
     const div = document.createElement("div");
     div.innerHTML = el.nodeName;
-    div.style.minWidth = "30px";
-    div.style.minHeight = "30px";
     div.style.margin = "10px";
     div.style.padding = "10px";
+    div.style.border = "1px solid black";
     div.style.background = el.color;
+    div.style.display = "flex";
     return div;
   };
 
-  const createSingleElementBox2 = arr => {
-    let i = 0;
-    let diClass = document.querySelector(".di-container");
-    let newEl = createSingleElementBox(arr[0]);
-    newEl.classList.add("di-body");
-    newEl.style.display = "flex";
-    diClass.appendChild(newEl);
-    diClass = document.querySelector(".di-body");
-    let newArr = arr[0].children;
+  const createDomInspectorContent = bodyEl => {
+    createDomInspectoBody(bodyEl);
+    let diClass = document.querySelector(".di-body");
+    let newArr = bodyEl[0].children;
     for (let i = 0; i < newArr.length; i++) {
       const element = newArr[i];
       if (element.children.length > 0) {
-        rec(element);
+        createDomInspectorRecursively(element);
       } else {
-        newEl = createSingleElementBox(element);
+        newEl = createSingleBox(element);
+        newEl.style.width = "15px";
+        newEl.style.height = "15px";
         diClass.appendChild(newEl);
       }
     }
   };
 
-  function rec(element, diClass) {
+  function createDomInspectorRecursively(element, diClass) {
     let newEl;
     if (element.parentName.toLowerCase() == "body") {
       diClass = document.querySelector(".di-body");
     }
     if (!element.children.length) {
-      newEl = createSingleElementBox(element);
+      newEl = createSingleBox(element);
+      newEl.style.maxWidth = "15px";
+      newEl.style.maxHeight = "15px";
       diClass.appendChild(newEl);
     } else {
-      newEl = createSingleElementBox(element);
-      newEl.style.display = "flex";
+      //element has children
+      newEl = createSingleBox(element);
+      if (".di-body" != diClass.className) newEl.style.flexWrap = "wrap"; //this line is only for responsive matters
       diClass.appendChild(newEl);
       diClass = newEl;
       for (let i = 0; i < element.children.length; i++) {
-        rec(element.children[i], diClass);
+        createDomInspectorRecursively(element.children[i], diClass);
       }
     }
   }
@@ -131,8 +126,7 @@
       let bodyTree = [getNodeTree(bodyEl)];
       console.log(bodyTree);
       createDomInspectorContainer();
-      //createSingleElementBox(bodyTree);
-      createSingleElementBox2(bodyTree);
+      createDomInspectorContent(bodyTree);
     }
   };
 })(document);
