@@ -3,7 +3,8 @@
     createDomElelemts(document)
   );
 
-  const elementToColorMapper = {};
+  const elementToColorMapper = {},
+    elementClassMapper = {};
 
   const getRandomColor = () => {
     const letters = "0123456789ABCDEF";
@@ -21,8 +22,42 @@
     elementToColorMapper[nodeName] = getRandomColor();
     return elementToColorMapper[nodeName];
   };
+
+  const generateClass = () => {
+    let text = "";
+    const possible =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    for (var i = 0; i < 5; i++)
+      text += possible.charAt(Math.floor(Math.random() * possible.length));
+    if (elementClassMapper[text]) {
+      generateClass();
+    } else {
+      elementClassMapper[text] = true;
+      return text;
+    }
+  };
+  const getCorrespondingDomEl = e => {
+    const element = e.target;
+    console.log(element);
+    const className = element.getAttribute("data-di-class");
+    return document.querySelector(`.${className}`);
+  };
+  const inspectorMouseOver = e => {
+    let correspondingDomEl = getCorrespondingDomEl(e);
+    correspondingDomEl.style.background = "lightgreen";
+  };
+
+  /**
+   * MouseOut event action for all elements
+   */
+  const inspectorMouseOut = e => {
+    let correspondingDomEl = getCorrespondingDomEl(e);
+    correspondingDomEl.style.background = "none";
+  };
+
   //recursive method the returns an object that represent the dom tree
   const getNodeTree = node => {
+    let unicClassName = generateClass();
     if (node.hasChildNodes()) {
       const children = [];
       for (let j = 0; j < node.childNodes.length; j++) {
@@ -30,20 +65,20 @@
           children.push(getNodeTree(node.childNodes[j]));
         }
       }
-
+      node.classList.add(`di-${unicClassName}`);
       return {
         nodeName: node.nodeName,
         node: node,
+        className: unicClassName,
         parentName: node.parentNode.nodeName,
         parent: node.parentNode,
         color: getColor(node.nodeName),
         children: children
       };
     }
-
     return false;
   };
-  //to-do : make this and createDomInspectorWrapper one generic method
+
   const createDomInspectorContainer = () => {
     const container = document.createElement("container");
     container.classList.add("di-container");
@@ -66,7 +101,10 @@
     div.style.border = "1px solid black";
     div.style.display = "flex";
     div.setAttribute("draggable", "true");
+    div.setAttribute("data-di-class", `di-${el.className}`);
     if (el.nodeName.toLowerCase() === "body") div.classList.add("di-body");
+    div.addEventListener("mouseover", inspectorMouseOver, true);
+    div.addEventListener("mouseout", inspectorMouseOut, true);
     return div;
   };
 
