@@ -66,38 +66,22 @@
     div.style.border = "1px solid black";
     div.style.display = "flex";
     div.setAttribute("draggable", "true");
+    if (el.nodeName.toLowerCase() === "body") div.classList.add("di-body");
     return div;
-  };
-
-  const createDomInspectoBody = bodyEl => {
-    let diContainer = document.querySelector(".di-container");
-    let newEl = createSingleBox(bodyEl[0]);
-    newEl.classList.add("di-body");
-    diContainer.appendChild(newEl);
   };
 
   const createDomInspector = bodyEl => {
     createDomInspectorContainer();
-    createDomInspectoBody(bodyEl);
-    let parentEl = document.querySelector(".di-body");
-    let bodyChildren = bodyEl[0].children;
-    for (let i = 0; i < bodyChildren.length; i++) {
-      const element = bodyChildren[i];
-      if (element.children.length > 0) {
-        createDomInspectorRecursively(element);
-      } else {
-        newEl = createSingleBox(element);
-        newEl.style.width = "15px";
-        newEl.style.height = "15px";
-        parentEl.appendChild(newEl);
-      }
-    }
+    createDomInspectorRecursively(bodyEl);
   };
 
   function createDomInspectorRecursively(element, parentEl) {
     let newEl;
     if (element.parentName.toLowerCase() == "body") {
       parentEl = document.querySelector(".di-body");
+    }
+    if (element.parentName.toLowerCase() == "html") {
+      parentEl = document.querySelector(".di-container");
     }
     if (!element.children.length) {
       newEl = createSingleBox(element);
@@ -124,7 +108,7 @@
     } catch (e) {
       throw new Error("Not a valid html");
     }
-    let bodyTree = [getNodeTree(bodyEl)];
+    let bodyTree = getNodeTree(bodyEl);
     console.log(bodyTree);
     createDomInspector(bodyTree);
   };
