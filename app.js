@@ -1,6 +1,6 @@
 (function(document) {
   document.addEventListener("DOMContentLoaded", () =>
-    makeDomElelemts(document)
+    createDomElelemts(document)
   );
   const elementToColorMapper = {};
 
@@ -55,15 +55,6 @@
     document.body.appendChild(container);
   };
 
-  const createDomInspectoBody = bodyEl => {
-    let diClass = document.querySelector(".di-container");
-    let newEl = createSingleBox(bodyEl[0]);
-    newEl.classList.add("di-body");
-    newEl.style.display = "flex";
-    newEl.style.border = "1px solid black";
-    diClass.appendChild(newEl);
-  };
-
   const createSingleBox = el => {
     const div = document.createElement("div");
     div.innerHTML = el.nodeName;
@@ -75,7 +66,15 @@
     return div;
   };
 
-  const createDomInspectorContent = bodyEl => {
+  const createDomInspectoBody = bodyEl => {
+    let diClass = document.querySelector(".di-container");
+    let newEl = createSingleBox(bodyEl[0]);
+    newEl.classList.add("di-body");
+    diClass.appendChild(newEl);
+  };
+
+  const createDomInspector = bodyEl => {
+    createDomInspectorContainer();
     createDomInspectoBody(bodyEl);
     let diClass = document.querySelector(".di-body");
     let newArr = bodyEl[0].children;
@@ -115,18 +114,15 @@
   }
 
   //Here the magic happen
-  const makeDomElelemts = document => {
+  const createDomElelemts = document => {
     let bodyEl;
     try {
       bodyEl = document.getElementsByTagName("body")[0];
     } catch (e) {
       throw new Error("Not a valid html");
     }
-    if (bodyEl) {
-      let bodyTree = [getNodeTree(bodyEl)];
-      console.log(bodyTree);
-      createDomInspectorContainer();
-      createDomInspectorContent(bodyTree);
-    }
+    let bodyTree = [getNodeTree(bodyEl)];
+    console.log(bodyTree);
+    createDomInspector(bodyTree);
   };
 })(document);
