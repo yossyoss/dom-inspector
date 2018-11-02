@@ -1,7 +1,8 @@
-(function(document) {
+(document => {
   document.addEventListener("DOMContentLoaded", () =>
     createDomElelemts(document)
   );
+
   const elementToColorMapper = {};
 
   const getRandomColor = () => {
@@ -58,57 +59,59 @@
   const createSingleBox = el => {
     const div = document.createElement("div");
     div.innerHTML = el.nodeName;
+    div.style.background = el.color;
     div.style.margin = "10px";
+    div.style.cursor = "-webkit-grab";
     div.style.padding = "10px";
     div.style.border = "1px solid black";
-    div.style.background = el.color;
     div.style.display = "flex";
+    div.setAttribute("draggable", "true");
     return div;
   };
 
   const createDomInspectoBody = bodyEl => {
-    let diClass = document.querySelector(".di-container");
+    let diContainer = document.querySelector(".di-container");
     let newEl = createSingleBox(bodyEl[0]);
     newEl.classList.add("di-body");
-    diClass.appendChild(newEl);
+    diContainer.appendChild(newEl);
   };
 
   const createDomInspector = bodyEl => {
     createDomInspectorContainer();
     createDomInspectoBody(bodyEl);
-    let diClass = document.querySelector(".di-body");
-    let newArr = bodyEl[0].children;
-    for (let i = 0; i < newArr.length; i++) {
-      const element = newArr[i];
+    let parentEl = document.querySelector(".di-body");
+    let bodyChildren = bodyEl[0].children;
+    for (let i = 0; i < bodyChildren.length; i++) {
+      const element = bodyChildren[i];
       if (element.children.length > 0) {
         createDomInspectorRecursively(element);
       } else {
         newEl = createSingleBox(element);
         newEl.style.width = "15px";
         newEl.style.height = "15px";
-        diClass.appendChild(newEl);
+        parentEl.appendChild(newEl);
       }
     }
   };
 
-  function createDomInspectorRecursively(element, diClass) {
+  function createDomInspectorRecursively(element, parentEl) {
     let newEl;
     if (element.parentName.toLowerCase() == "body") {
-      diClass = document.querySelector(".di-body");
+      parentEl = document.querySelector(".di-body");
     }
     if (!element.children.length) {
       newEl = createSingleBox(element);
       newEl.style.maxWidth = "15px";
       newEl.style.maxHeight = "15px";
-      diClass.appendChild(newEl);
+      parentEl.appendChild(newEl);
     } else {
       //element has children
       newEl = createSingleBox(element);
-      if (".di-body" != diClass.className) newEl.style.flexWrap = "wrap"; //this line is only for responsive matters
-      diClass.appendChild(newEl);
-      diClass = newEl;
+      if (".di-body" != parentEl.className) newEl.style.flexWrap = "wrap"; //this line is only for responsive matters
+      parentEl.appendChild(newEl);
+      parentEl = newEl;
       for (let i = 0; i < element.children.length; i++) {
-        createDomInspectorRecursively(element.children[i], diClass);
+        createDomInspectorRecursively(element.children[i], parentEl);
       }
     }
   }
