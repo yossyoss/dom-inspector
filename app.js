@@ -36,23 +36,75 @@
       return text;
     }
   };
+
   const getCorrespondingDomEl = e => {
     const element = e.target;
-    console.log(element);
+    //console.log(element);
     const className = element.getAttribute("data-di-class");
     return document.querySelector(`.${className}`);
   };
-  const inspectorMouseOver = e => {
-    let correspondingDomEl = getCorrespondingDomEl(e);
-    correspondingDomEl.style.background = "lightgreen";
+
+  // This is an helper function that I took from here https://css-tricks.com/snippets/javascript/lighten-darken-color/
+  // This function takes colors in hex format (i.e. #F06D06, with or without hash) and lightens or darkens them with a value
+  const getDarkenColor = (colorCode, amount) => {
+    let usePound = false;
+    if (colorCode[0] == "#") {
+      colorCode = colorCode.slice(1);
+      usePound = true;
+    }
+    let num = parseInt(colorCode, 16);
+    let r = (num >> 16) + amount;
+    if (r > 255) {
+      r = 255;
+    } else if (r < 0) {
+      r = 0;
+    }
+    let b = ((num >> 8) & 0x00ff) + amount;
+    if (b > 255) {
+      b = 255;
+    } else if (b < 0) {
+      b = 0;
+    }
+    let g = (num & 0x0000ff) + amount;
+    if (g > 255) {
+      g = 255;
+    } else if (g < 0) {
+      g = 0;
+    }
+    return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
   };
 
-  /**
-   * MouseOut event action for all elements
-   */
+  const highlightParent = e => {
+    let darker = 20;
+    e.style.background = "#86ff86";
+    e = e.parentNode !== document ? e.parentNode : false;
+    while (e) {
+      darker += 20;
+      e.style.background = getDarkenColor("#86ff86", darker);
+      // Go up to the next parent node:
+      e = e.parentNode !== document ? e.parentNode : false;
+    }
+  };
+
+  const inspectorMouseOver = e => {
+    let correspondingDomEl = getCorrespondingDomEl(e);
+    highlightParent(correspondingDomEl);
+  };
+
   const inspectorMouseOut = e => {
     let correspondingDomEl = getCorrespondingDomEl(e);
     correspondingDomEl.style.background = "none";
+  };
+
+  const inspectorOnClick = e => {
+    e.preventDefault();
+    //console.log(e);
+    // These are the default actions (the XPath code might be a bit janky)
+    // Really, these could do anything:
+    //console.log(cssPath(e.target));
+    /* console.log( getXPath(e.target).join('/') ); */
+
+    //return false;
   };
 
   //recursive method the returns an object that represent the dom tree
@@ -103,8 +155,9 @@
     div.setAttribute("draggable", "true");
     div.setAttribute("data-di-class", `di-${el.className}`);
     if (el.nodeName.toLowerCase() === "body") div.classList.add("di-body");
-    div.addEventListener("mouseover", inspectorMouseOver, true);
-    div.addEventListener("mouseout", inspectorMouseOut, true);
+    div.addEventListener("mouseover", inspectorMouseOver, false);
+    div.addEventListener("mouseout", inspectorMouseOut, false);
+    div.addEventListener("click", inspectorOnClick, false);
     return div;
   };
 
