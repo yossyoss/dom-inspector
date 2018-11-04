@@ -1,6 +1,6 @@
 (document => {
   document.addEventListener("DOMContentLoaded", () =>
-    createDomElelemts(document)
+    createDomInspector(document)
   );
 
   let dragged;
@@ -9,7 +9,7 @@
 
   const isElementValidForDropping = e => {
     while (e) {
-      if (e == dragged) return false;
+      if (e === dragged) return false;
       // Go up to the next parent node:
       e =
         e.parentNode !== document.querySelector(".di-body")
@@ -31,40 +31,64 @@
     }
   };
   const dragover = event => {
+    event.preventDefault();
     let e = event.target;
     if (isElementValidForDropping(e)) {
-      event.preventDefault();
       const dropPosition = checkDropPosition(event, e);
       if (dropPosition === "center") {
-        e.style.border = "3px solid black";
+        e.style.border = "4px solid black";
       } else if (dropPosition === "left") {
         e.style.border = "1px solid black";
-        e.style.borderLeft = "3px solid black";
+        e.style.borderLeft = "4px solid black";
       } else if (dropPosition === "right") {
         e.style.border = "1px solid black";
-        e.style.borderRight = "3px solid black";
+        e.style.borderRight = "4px solid black";
       }
     }
-
-    //console.log("X: " + dragX + " Y: " + dragY);
   };
 
   const dragstart = event => {
     event.stopPropagation();
-    dragged = event.target;
+    dragged = event.target; //save the dragged element for future use
   };
 
   const dragleave = event => {
-    event.target.style.border = "1px solid black";
+    const e = event.target;
+    e.style.border = "1px solid black";
   };
 
   const drop = event => {
     event.preventDefault();
     event.stopPropagation();
-    event.target.style.border = "1px solid black";
     const e = event.target;
+    e.style.border = "1px solid black";
     const dropPosition = checkDropPosition(event, e);
-    swapElements(dragged, event.target, dropPosition);
+    if (isElementValidForDropping(e))
+      swapElements(dragged, event.target, dropPosition);
+  };
+
+  const swapElements = (el1, el2, dragInto) => {
+    // save the location of el2
+    const parent2 = el2.parentNode;
+    const next2 = el2.nextSibling;
+    const correspondingDomEl1 = getCorrespondingDomEl(null, el1);
+    const correspondingDomEl2 = getCorrespondingDomEl(null, el2);
+    if (dragInto === "center") {
+      el2.appendChild(el1);
+      correspondingDomEl2.appendChild(correspondingDomEl1);
+    } else if (dragInto === "left") {
+      parent2.insertBefore(el1, el2);
+      correspondingDomEl2.parentNode.insertBefore(
+        correspondingDomEl1,
+        correspondingDomEl2
+      );
+    } else {
+      parent2.insertBefore(el1, next2);
+      correspondingDomEl2.parentNode.insertBefore(
+        correspondingDomEl1,
+        correspondingDomEl2.nextSibling
+      );
+    }
   };
 
   const getRandomColor = () => {
@@ -100,42 +124,15 @@
 
   const getCorrespondingDomEl = (event, elm) => {
     const element = event ? event.target : elm;
-    //console.log(element);
     const className = element.getAttribute("data-di-class");
     return document.querySelector(`.${className}`);
-  };
-
-  const swapElements = (el1, el2, dragInto) => {
-    // save the location of el2
-    const parent2 = el2.parentNode;
-    const next2 = el2.nextSibling;
-    const correspondingDomEl1 = getCorrespondingDomEl(null, el1);
-    const correspondingDomEl2 = getCorrespondingDomEl(null, el2);
-    if (dragInto === "center") {
-      el2.appendChild(el1);
-      el2.style.maxHeight = "none";
-      el2.style.maxWidth = "none";
-      correspondingDomEl2.appendChild(correspondingDomEl1);
-    } else if (dragInto === "left") {
-      parent2.insertBefore(el1, el2);
-      correspondingDomEl2.parentNode.insertBefore(
-        correspondingDomEl1,
-        correspondingDomEl2
-      );
-    } else {
-      parent2.insertBefore(el1, next2);
-      correspondingDomEl2.parentNode.insertBefore(
-        correspondingDomEl1,
-        correspondingDomEl2.nextSibling
-      );
-    }
   };
 
   // This is a function that I took from here https://css-tricks.com/snippets/javascript/lighten-darken-color/
   // It takes colors in hex format (i.e. #F06D06, with or without hash) and lightens or darkens them with a value
   const getLightenOrDarkenColor = (colorCode, amount) => {
     let usePound = false;
-    if (colorCode[0] == "#") {
+    if (colorCode[0] === "#") {
       colorCode = colorCode.slice(1);
       usePound = true;
     }
@@ -161,6 +158,7 @@
     return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
   };
 
+  //This function handle the highlights of the corresponding element
   const highlightParent = e => {
     let Lighter = 0;
     const elementsTree = [];
@@ -177,7 +175,7 @@
 
   const inspectorMouseOver = e => {
     e.stopPropagation();
-    let correspondingDomEl = getCorrespondingDomEl(e);
+    const correspondingDomEl = getCorrespondingDomEl(e);
     highlightParent(correspondingDomEl);
   };
 
@@ -194,11 +192,8 @@
     }
   };
 
-  const inspectorOnClick = e => {
-    e.stopPropagation();
-  };
-
-  //recursive method the returns an object that represent the dom tree
+  //This recursive function returns an object that represent the dom tree
+  //(and also generate a unic classname in order to match dom inspector element with his corresponding dom node)
   const getNodeTree = node => {
     let unicClassName = generateClassName();
     if (node.hasChildNodes()) {
@@ -211,29 +206,16 @@
       node.classList.add(`di-${unicClassName}`);
       return {
         nodeName: node.nodeName,
-        node: node,
         className: unicClassName,
         parentName: node.parentNode.nodeName,
-        parent: node.parentNode,
         color: getColor(node.nodeName),
         children: children
       };
     }
-    return false;
+    return null;
   };
 
-  const createDomInspectorContainer = () => {
-    const container = document.createElement("container");
-    container.classList.add("di-container");
-    container.style.background = "lightgray";
-    container.style.width = "100%";
-    container.style.height = "300px";
-    container.style.fontSize = "x-small";
-    container.style.border = "1px solid black";
-    container.style.display = "flex";
-    document.body.appendChild(container);
-  };
-
+  //This function creates new element in the dom inspector
   const createSingleBox = el => {
     const div = document.createElement("div");
     div.innerHTML = el.nodeName;
@@ -243,66 +225,74 @@
     div.style.padding = "10px";
     div.style.border = "1px solid black";
     div.style.display = "flex";
+    div.style.maxWidth = "fit-content";
+    div.style.maxHeight = "fit-content";
     div.setAttribute("draggable", "true");
     div.setAttribute("data-di-class", `di-${el.className}`);
     if (el.nodeName.toLowerCase() === "body") {
       div.classList.add("di-body");
       div.setAttribute("draggable", "false");
+      div.style.minHeight = "200px";
     }
-    div.addEventListener("dragover", dragover, false);
-    div.addEventListener("dragleave", dragleave, false);
-
-    div.addEventListener("dragstart", dragstart, false);
-    div.addEventListener("drop", drop, false);
-
-    div.addEventListener("mouseover", inspectorMouseOver, true);
-    div.addEventListener("mouseout", inspectorMouseOut, false);
-    div.addEventListener("click", inspectorOnClick, false);
-
+    //adding drag/drop events
+    div.addEventListener("dragover", dragover);
+    div.addEventListener("dragleave", dragleave);
+    div.addEventListener("dragstart", dragstart);
+    div.addEventListener("drop", drop);
+    //adding mouse events
+    div.addEventListener("mouseover", inspectorMouseOver);
+    div.addEventListener("mouseout", inspectorMouseOut);
     return div;
   };
 
-  const createDomInspector = bodyEl => {
-    createDomInspectorContainer();
-    createDomInspectorRecursively(bodyEl);
+  //creating a grey container to put the dom inspecter in it
+  const createDomInspectorContainer = () => {
+    const container = document.createElement("container");
+    container.classList.add("di-container");
+    container.style.background = "lightgray";
+    container.style.width = "100%";
+    container.style.height = "300px";
+    container.style.fontSize = "x-small";
+    container.style.display = "flex";
+    container.style.boxShadow = "0 -1px 1px grey";
+    document.body.appendChild(container);
   };
 
-  const createDomInspectorRecursively = (element, parentEl) => {
+  const createDomInspectorContentRecursively = (element, parentEl) => {
     let newEl;
-    if (element.parentName.toLowerCase() == "body") {
+    if (element.parentName && element.parentName.toLowerCase() === "body") {
       parentEl = document.querySelector(".di-body");
     }
-    if (element.parentName.toLowerCase() == "html") {
+    if (element.parentName && element.parentName.toLowerCase() === "html") {
       parentEl = document.querySelector(".di-container");
     }
     if (!element.children.length) {
       newEl = createSingleBox(element);
-      newEl.addEventListener("click", inspectorOnClick, false);
-      newEl.style.maxWidth = "10px";
-      newEl.style.maxHeight = "10px";
       parentEl.appendChild(newEl);
     } else {
       //element has children
       newEl = createSingleBox(element);
-      //if (".di-body" != parentEl.className) newEl.style.flexWrap = "wrap"; //this line is only for responsive matters
+      if (".di-body" != parentEl.className) newEl.style.flexWrap = "wrap"; //this line is only for responsive matters
       parentEl.appendChild(newEl);
       parentEl = newEl;
       for (let i = 0; i < element.children.length; i++) {
-        createDomInspectorRecursively(element.children[i], parentEl);
+        createDomInspectorContentRecursively(element.children[i], parentEl);
       }
     }
   };
 
-  //Here the magic happen
-  const createDomElelemts = document => {
-    let bodyEl;
+  const createDomInspectorElelemts = bodyEl => {
+    createDomInspectorContainer();
+    createDomInspectorContentRecursively(bodyEl);
+  };
+
+  //Here the magic happens
+  const createDomInspector = document => {
     try {
-      bodyEl = document.getElementsByTagName("body")[0];
+      let bodyTree = getNodeTree(document.body);
+      createDomInspectorElelemts(bodyTree);
     } catch (e) {
-      throw new Error("Not a valid html");
+      console.error("Not a valid HTML");
     }
-    let bodyTree = getNodeTree(bodyEl);
-    console.log(bodyTree);
-    createDomInspector(bodyTree);
   };
 })(document);
