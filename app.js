@@ -2,111 +2,62 @@
   document.addEventListener("DOMContentLoaded", () =>
     createDomElelemts(document)
   );
-  document.addEventListener(
-    "drag",
-    function(event) {
-      //loopOverTree(event.target);
-      // console.log(event.target.getAttribute("data-di-class"));
-    },
-    false
-  );
+
   let dragged;
-  const loopOverTree = el => {
-    // if (el.target.children.length) {
-    //     let clone = el.cloneNode(false);
-    //     el.replaceWith(clone);
-    //el.parentElement.appendChild(clone);
-    //   }
-    // console.log("el", el);
-    // console.log("dragged", dragged);
-
-    if (
-      !el.children.length &&
-      (el.parentNode && el.parentNode.className != "di-body")
-    ) {
-      let clone = el.cloneNode(true);
-      el.replaceWith(clone);
-    } else {
-      //element has children
-      for (let i = 0; i < el.children.length; i++) {
-        // let clone = el.cloneNode(true);
-        // el.replaceWith(clone);
-
-        loopOverTree(el.children[i]);
-      }
+ 
+  const checkIdItsChild = e => {
+  while (e) {
+     if(e == dragged)return true
+      // Go up to the next parent node:
+      e = e.parentNode !== document.querySelector(".di-body") ? e.parentNode : false;
     }
-  };
-  const loopOverTreeEvents = el => {
-    if (
-      !el.children.length &&
-      (el.parentNode && el.parentNode.className != "di-body")
-    ) {
-      el.addEventListener("drag", drag, false);
-      el.addEventListener("dragend", dragend, false);
-      el.addEventListener("dragenter", dragenter, false);
-      el.addEventListener("dragexit", dragexit, false);
-      el.addEventListener("dragleave", dragleave, false);
-      el.addEventListener("dragover", dragover, false);
-      el.addEventListener("dragstart", dragstart, false);
-      el.addEventListener("drop", drop, false);
-    } else {
-      //element has children
-      for (let i = 0; i < el.children.length; i++) {
-        loopOverTree(el.children[i]);
-      }
+    return false
+  }
+  const dragover = event => {
+    let e = event.target;
+    
+    if(!( (e == dragged || checkIdItsChild(e)) )) {
+      event.preventDefault();
     }
-  };
+ };
+
   const dragstart = event => {
-    //console.log("dragstart");
+    event.stopPropagation();
     dragged = event.target;
   };
-  const dragover = event => {
-    //  console.log("dragover");
-    event.preventDefault();
-    event.stopPropagation();
-    //loopOverTree(event.target);
-
-    //console.log("dragover", event.target);
-  };
+  
+  
   const dragenter = event => {
-    //console.log("dragenter");
-    // console.log(event.target);
-    //event.dataTransfer.dropEffect = "copy";
-    if (dragged == event.target) {
-      return;
-    }
-    event.target.style.border = "2px solid black";
+    event.stopPropagation();
+    // console.log("dragenter");
+    let e = event.target;
+    e.style.border = "2px solid black";
   };
-  //   div.addEventListener("drop", drop, false);
-  //   div.addEventListener("dragleave", dragleave, false);
-  //   div.addEventListener("dragenter", dragenter, false);
-  //   div.addEventListener("dragover", dragover, false);
-  //   div.addEventListener("dragstart", dragstart, false);
 
   const dragleave = event => {
     // console.log("dragleave");
     event.target.style.border = "1px solid black";
   };
   const drag = event => {
-    // console.log("drag");
+    //console.log("drag");
   };
   const dragend = event => {
     //console.log("dragend");
-    //loopOverTreeEvents(event.target);
+    // loopOverTreeEvents(event.target);
   };
   const dragexit = event => {
-    //console.log("dragexit");
+    // console.log("dragexit");
   };
 
   const drop = event => {
-    //console.log("drop");
+    console.log("drop");
     event.preventDefault();
     event.stopPropagation();
     if (dragged == event.target) return;
     // move dragged elem to the selected drop target
     //   dragged.parentNode.removeChild(dragged);
     //   event.target.appendChild(dragged);
-    //swapElements(dragged, event.target);
+    swapElements(dragged, event.target);
   };
 
   const elementToColorMapper = {},
@@ -219,7 +170,7 @@
 
   const inspectorMouseOver = e => {
     e.stopPropagation();
-
+    addEvents(e.target)
     let correspondingDomEl = getCorrespondingDomEl(e);
     highlightParent(correspondingDomEl);
   };
@@ -239,6 +190,7 @@
 
   const inspectorOnClick = e => {
     e.stopPropagation();
+    
     //console.log(e);
     // These are the default actions (the XPath code might be a bit janky)
     // Really, these could do anything:
@@ -298,19 +250,20 @@
     if (el.nodeName.toLowerCase() === "body") {
       div.classList.add("di-body");
       div.setAttribute("draggable", "false");
+      div.addEventListener("dragover",dragover,false)
     }
     div.addEventListener("drag", drag, false);
-    div.addEventListener("dragend", dragend, false);
+    // div.addEventListener("dragend", dragend, false);
     div.addEventListener("dragenter", dragenter, false);
-    div.addEventListener("dragexit", dragexit, false);
+    // div.addEventListener("dragexit", dragexit, false);
     div.addEventListener("dragleave", dragleave, false);
-    div.addEventListener("dragover", dragover, false);
+    
     div.addEventListener("dragstart", dragstart, false);
     div.addEventListener("drop", drop, false);
 
-    div.addEventListener("mouseover", inspectorMouseOver, false);
+    div.addEventListener("mouseover", inspectorMouseOver, true);
     div.addEventListener("mouseout", inspectorMouseOut, false);
-    div.addEventListener("click", inspectorOnClick, false);
+    // div.addEventListener("click", inspectorOnClick, false);
 
     return div;
   };
@@ -319,6 +272,17 @@
     createDomInspectorContainer();
     createDomInspectorRecursively(bodyEl);
   };
+
+  const addEvents = el => {
+     // div.addEventListener("drag", drag, false);
+    // div.addEventListener("dragend", dragend, false);
+    // div.addEventListener("dragenter", dragenter, false);
+    // div.addEventListener("dragexit", dragexit, false);
+    // div.addEventListener("dragleave", dragleave, false);
+    // div.addEventListener("dragover", dragover, false);
+    // div.addEventListener("dragstart", dragstart, false);
+    // div.addEventListener("drop", drop, false);
+  }
 
   function createDomInspectorRecursively(element, parentEl) {
     let newEl;
@@ -330,6 +294,7 @@
     }
     if (!element.children.length) {
       newEl = createSingleBox(element);
+      newEl.addEventListener("click", inspectorOnClick, false);      
       newEl.style.maxWidth = "15px";
       newEl.style.maxHeight = "15px";
       parentEl.appendChild(newEl);
@@ -356,5 +321,6 @@
     let bodyTree = getNodeTree(bodyEl);
     console.log(bodyTree);
     createDomInspector(bodyTree);
+    //addEvents()
   };
 })(document);
