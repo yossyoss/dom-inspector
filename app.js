@@ -175,7 +175,7 @@
 
   // This is a function that I took from here https://css-tricks.com/snippets/javascript/lighten-darken-color/
   // It takes colors in hex format (i.e. #F06D06, with or without hash) and lightens or darkens them with a value
-  const getDarkenColor = (colorCode, amount) => {
+  const getLightenOrDarkenColor = (colorCode, amount) => {
     let usePound = false;
     if (colorCode[0] == "#") {
       colorCode = colorCode.slice(1);
@@ -204,15 +204,17 @@
   };
 
   const highlightParent = e => {
-    let darker = 20;
-    e.style.background = "#86ff86";
-    e = e.parentNode !== document ? e.parentNode : false;
+    let Lighter = 0;
+    const elementsTree = [];
     while (e) {
-      darker += 20;
-      e.style.background = getDarkenColor("#86ff86", darker);
+      elementsTree.unshift(e);
       // Go up to the next parent node:
       e = e.parentNode !== document ? e.parentNode : false;
     }
+    elementsTree.forEach(el => {
+      el.style.background = getLightenOrDarkenColor("#9eff9e", Lighter);
+      Lighter -= 20;
+    });
   };
 
   const inspectorMouseOver = e => {
