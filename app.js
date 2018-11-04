@@ -113,6 +113,8 @@
     const correspondingDomEl2 = getCorrespondingDomEl(null, el2);
     if (dragInto === "center") {
       el2.appendChild(el1);
+      el2.style.maxHeight = "none";
+      el2.style.maxWidth = "none";
       correspondingDomEl2.appendChild(correspondingDomEl1);
     } else if (dragInto === "left") {
       parent2.insertBefore(el1, el2);
