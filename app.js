@@ -4,64 +4,68 @@
   );
 
   let dragged;
- 
-  const checkIdItsChild = e => {
-  while (e) {
-     if(e == dragged)return true
+  const elementToColorMapper = {},
+    elementClassMapper = {};
+
+  const isElementValidForDropping = e => {
+    while (e) {
+      if (e == dragged) return false;
       // Go up to the next parent node:
-      e = e.parentNode !== document.querySelector(".di-body") ? e.parentNode : false;
+      e =
+        e.parentNode !== document.querySelector(".di-body")
+          ? e.parentNode
+          : false;
     }
-    return false
-  }
+    return true;
+  };
+
+  const checkDropPosition = (event, el) => {
+    const shiftX = event.clientX - el.getBoundingClientRect().left;
+    const elementWidth = el.getBoundingClientRect().width;
+    if (shiftX > 10 && elementWidth - shiftX > 10) {
+      return "center";
+    } else if (shiftX < 10) {
+      return "left";
+    } else if (elementWidth - shiftX < 10) {
+      return "right";
+    }
+  };
   const dragover = event => {
     let e = event.target;
-    
-    if(!( (e == dragged || checkIdItsChild(e)) )) {
+    if (isElementValidForDropping(e)) {
       event.preventDefault();
+      const dropPosition = checkDropPosition(event, e);
+      if (dropPosition === "center") {
+        e.style.border = "3px solid black";
+      } else if (dropPosition === "left") {
+        e.style.border = "1px solid black";
+        e.style.borderLeft = "3px solid black";
+      } else if (dropPosition === "right") {
+        e.style.border = "1px solid black";
+        e.style.borderRight = "3px solid black";
+      }
     }
- };
+
+    //console.log("X: " + dragX + " Y: " + dragY);
+  };
 
   const dragstart = event => {
     event.stopPropagation();
     dragged = event.target;
   };
-  
-  
-  const dragenter = event => {
-    event.stopPropagation();
-    // console.log("dragenter");
-    let e = event.target;
-    e.style.border = "2px solid black";
-  };
 
   const dragleave = event => {
-    // console.log("dragleave");
     event.target.style.border = "1px solid black";
-  };
-  const drag = event => {
-    //console.log("drag");
-  };
-  const dragend = event => {
-    //console.log("dragend");
-    // loopOverTreeEvents(event.target);
-  };
-  const dragexit = event => {
-    // console.log("dragexit");
   };
 
   const drop = event => {
-    console.log("drop");
     event.preventDefault();
     event.stopPropagation();
-    if (dragged == event.target) return;
-    // move dragged elem to the selected drop target
-    //   dragged.parentNode.removeChild(dragged);
-    //   event.target.appendChild(dragged);
-    swapElements(dragged, event.target);
+    event.target.style.border = "1px solid black";
+    const e = event.target;
+    const dropPosition = checkDropPosition(event, e);
+    swapElements(dragged, event.target, dropPosition);
   };
-
-  const elementToColorMapper = {},
-    elementClassMapper = {};
 
   const getRandomColor = () => {
     const letters = "0123456789ABCDEF";
@@ -84,7 +88,7 @@
     let text = "";
     const possible =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    for (var i = 0; i < 5; i++)
+    for (let i = 0; i < 5; i++)
       text += possible.charAt(Math.floor(Math.random() * possible.length));
     if (elementClassMapper[text]) {
       generateClassName();
@@ -94,33 +98,34 @@
     }
   };
 
-  const getCorrespondingDomEl = e => {
-    const element = e.target;
+  const getCorrespondingDomEl = (event, elm) => {
+    const element = event ? event.target : elm;
     //console.log(element);
     const className = element.getAttribute("data-di-class");
     return document.querySelector(`.${className}`);
   };
 
-  const swapElements = (el1, el2) => {
-    // save the location of obj2
-    var parent2 = el2.parentNode;
-    var next2 = el2.nextSibling;
-    // special case for el1 is the next sibling of el2
-    if (next2 === el1) {
-      // just put el1 before el2
+  const swapElements = (el1, el2, dragInto) => {
+    // save the location of el2
+    const parent2 = el2.parentNode;
+    const next2 = el2.nextSibling;
+    const correspondingDomEl1 = getCorrespondingDomEl(null, el1);
+    const correspondingDomEl2 = getCorrespondingDomEl(null, el2);
+    if (dragInto === "center") {
+      el2.appendChild(el1);
+      correspondingDomEl2.appendChild(correspondingDomEl1);
+    } else if (dragInto === "left") {
       parent2.insertBefore(el1, el2);
+      correspondingDomEl2.parentNode.insertBefore(
+        correspondingDomEl1,
+        correspondingDomEl2
+      );
     } else {
-      // insert el2 right before obj1
-      el1.parentNode.insertBefore(el2, el1);
-
-      // now insert el1 where el2 was
-      if (next2) {
-        // if there was an element after el2, then insert el1 right before that
-        parent2.insertBefore(el1, next2);
-      } else {
-        // otherwise, just append as last child
-        parent2.appendChild(el1);
-      }
+      parent2.insertBefore(el1, next2);
+      correspondingDomEl2.parentNode.insertBefore(
+        correspondingDomEl1,
+        correspondingDomEl2.nextSibling
+      );
     }
   };
 
@@ -170,7 +175,6 @@
 
   const inspectorMouseOver = e => {
     e.stopPropagation();
-    addEvents(e.target)
     let correspondingDomEl = getCorrespondingDomEl(e);
     highlightParent(correspondingDomEl);
   };
@@ -190,14 +194,6 @@
 
   const inspectorOnClick = e => {
     e.stopPropagation();
-    
-    //console.log(e);
-    // These are the default actions (the XPath code might be a bit janky)
-    // Really, these could do anything:
-    //console.log(cssPath(e.target));
-    /* console.log( getXPath(e.target).join('/') ); */
-
-    //return false;
   };
 
   //recursive method the returns an object that represent the dom tree
@@ -240,7 +236,7 @@
     const div = document.createElement("div");
     div.innerHTML = el.nodeName;
     div.style.background = el.color;
-    div.style.margin = "10px";
+    div.style.margin = "5px";
     div.style.cursor = "-webkit-grab";
     div.style.padding = "10px";
     div.style.border = "1px solid black";
@@ -250,20 +246,16 @@
     if (el.nodeName.toLowerCase() === "body") {
       div.classList.add("di-body");
       div.setAttribute("draggable", "false");
-      div.addEventListener("dragover",dragover,false)
     }
-    div.addEventListener("drag", drag, false);
-    // div.addEventListener("dragend", dragend, false);
-    div.addEventListener("dragenter", dragenter, false);
-    // div.addEventListener("dragexit", dragexit, false);
+    div.addEventListener("dragover", dragover, false);
     div.addEventListener("dragleave", dragleave, false);
-    
+
     div.addEventListener("dragstart", dragstart, false);
     div.addEventListener("drop", drop, false);
 
     div.addEventListener("mouseover", inspectorMouseOver, true);
     div.addEventListener("mouseout", inspectorMouseOut, false);
-    // div.addEventListener("click", inspectorOnClick, false);
+    div.addEventListener("click", inspectorOnClick, false);
 
     return div;
   };
@@ -273,18 +265,7 @@
     createDomInspectorRecursively(bodyEl);
   };
 
-  const addEvents = el => {
-     // div.addEventListener("drag", drag, false);
-    // div.addEventListener("dragend", dragend, false);
-    // div.addEventListener("dragenter", dragenter, false);
-    // div.addEventListener("dragexit", dragexit, false);
-    // div.addEventListener("dragleave", dragleave, false);
-    // div.addEventListener("dragover", dragover, false);
-    // div.addEventListener("dragstart", dragstart, false);
-    // div.addEventListener("drop", drop, false);
-  }
-
-  function createDomInspectorRecursively(element, parentEl) {
+  const createDomInspectorRecursively = (element, parentEl) => {
     let newEl;
     if (element.parentName.toLowerCase() == "body") {
       parentEl = document.querySelector(".di-body");
@@ -294,21 +275,21 @@
     }
     if (!element.children.length) {
       newEl = createSingleBox(element);
-      newEl.addEventListener("click", inspectorOnClick, false);      
-      newEl.style.maxWidth = "15px";
-      newEl.style.maxHeight = "15px";
+      newEl.addEventListener("click", inspectorOnClick, false);
+      newEl.style.maxWidth = "10px";
+      newEl.style.maxHeight = "10px";
       parentEl.appendChild(newEl);
     } else {
       //element has children
       newEl = createSingleBox(element);
-      if (".di-body" != parentEl.className) newEl.style.flexWrap = "wrap"; //this line is only for responsive matters
+      //if (".di-body" != parentEl.className) newEl.style.flexWrap = "wrap"; //this line is only for responsive matters
       parentEl.appendChild(newEl);
       parentEl = newEl;
       for (let i = 0; i < element.children.length; i++) {
         createDomInspectorRecursively(element.children[i], parentEl);
       }
     }
-  }
+  };
 
   //Here the magic happen
   const createDomElelemts = document => {
@@ -321,6 +302,5 @@
     let bodyTree = getNodeTree(bodyEl);
     console.log(bodyTree);
     createDomInspector(bodyTree);
-    //addEvents()
   };
 })(document);
