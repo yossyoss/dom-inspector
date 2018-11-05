@@ -67,26 +67,26 @@
       swapElements(dragged, event.target, dropPosition);
   };
 
-  const swapElements = (el1, el2, dragInto) => {
+  const swapElements = (source, target, dragInto) => {
     // save the location of el2
-    const parent2 = el2.parentNode;
-    const next2 = el2.nextSibling;
-    const correspondingDomEl1 = getCorrespondingDomEl(null, el1);
-    const correspondingDomEl2 = getCorrespondingDomEl(null, el2);
+    const parentTarget = target.parentNode;
+    const nextTarget = target.nextSibling;
+    const correspondingDomSrc = getCorrespondingDomEl(null, source);
+    const correspondingDomTarget = getCorrespondingDomEl(null, target);
     if (dragInto === "center") {
-      el2.appendChild(el1);
-      correspondingDomEl2.appendChild(correspondingDomEl1);
+      target.appendChild(source);
+      correspondingDomTarget.appendChild(correspondingDomSrc);
     } else if (dragInto === "left") {
-      parent2.insertBefore(el1, el2);
-      correspondingDomEl2.parentNode.insertBefore(
-        correspondingDomEl1,
-        correspondingDomEl2
+      parentTarget.insertBefore(source, target);
+      correspondingDomTarget.parentNode.insertBefore(
+        correspondingDomSrc,
+        correspondingDomTarget
       );
     } else {
-      parent2.insertBefore(el1, next2);
-      correspondingDomEl2.parentNode.insertBefore(
-        correspondingDomEl1,
-        correspondingDomEl2.nextSibling
+      parentTarget.insertBefore(source, nextTarget);
+      correspondingDomTarget.parentNode.insertBefore(
+        correspondingDomSrc,
+        correspondingDomTarget.nextSibling
       );
     }
   };
@@ -198,11 +198,11 @@
     let unicClassName = generateClassName();
     if (node.hasChildNodes()) {
       const children = [];
-      for (let j = 0; j < node.childNodes.length; j++) {
-        if (getNodeTree(node.childNodes[j])) {
-          children.push(getNodeTree(node.childNodes[j]));
+      node.childNodes.forEach(n => {
+        if (getNodeTree(n)) {
+          children.push(getNodeTree(n));
         }
-      }
+      });
       node.classList.add(`di-${unicClassName}`);
       return {
         nodeName: node.nodeName,
@@ -224,7 +224,6 @@
     div.style.cursor = "-webkit-grab";
     div.style.padding = "10px";
     div.style.border = "1px solid black";
-    div.style.display = "flex";
     div.style.maxWidth = "fit-content";
     div.style.maxHeight = "fit-content";
     div.setAttribute("draggable", "true");
@@ -235,9 +234,9 @@
       div.style.minHeight = "200px";
     }
     //adding drag/drop events
+    div.addEventListener("dragstart", dragstart);
     div.addEventListener("dragover", dragover);
     div.addEventListener("dragleave", dragleave);
-    div.addEventListener("dragstart", dragstart);
     div.addEventListener("drop", drop);
     //adding mouse events
     div.addEventListener("mouseover", inspectorMouseOver);
@@ -272,18 +271,43 @@
     } else {
       //element has children
       newEl = createSingleBox(element);
+      newEl.style.display = "flex";
       if (".di-body" != parentEl.className) newEl.style.flexWrap = "wrap"; //this line is only for responsive matters
       parentEl.appendChild(newEl);
       parentEl = newEl;
-      for (let i = 0; i < element.children.length; i++) {
-        createDomInspectorContentRecursively(element.children[i], parentEl);
-      }
+      element.children.forEach(el => {
+        createDomInspectorContentRecursively(el, parentEl);
+      });
     }
   };
+  // const test = (node, parentEl) => {
+  //   console.log("im here");
+  //   let unicClassName = generateClassName();
+  //   let newEl,
+  //     parentName = node.parentNode.nodeName;
+  //   if (parentName && parentName.toLowerCase() === "body") {
+  //     parentEl = document.querySelector(".di-body");
+  //   }
+  //   if (parentName && parentName.toLowerCase() === "html") {
+  //     parentEl = document.querySelector(".di-container");
+  //   }
+  //   if (node.hasChildNodes()) {
+  //     //element has children
+  //     newEl = createSingleBox(node);
+  //     if (".di-body" != parentEl.className) newEl.style.flexWrap = "wrap"; //this line is only for responsive matters
+  //     parentEl.appendChild(newEl);
+  //     parentEl = newEl;
+  //     test(node.children);
+  //   }
+  //   node.classList.add(`di-${unicClassName}`);
+  //   newEl = createSingleBox(node);
+  //   parentEl.appendChild(newEl);
+  // };
 
   const createDomInspectorElelemts = bodyEl => {
     createDomInspectorContainer();
     createDomInspectorContentRecursively(bodyEl);
+    //test(document.body);
   };
 
   //Here the magic happens
