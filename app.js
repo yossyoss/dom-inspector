@@ -280,34 +280,10 @@
       });
     }
   };
-  // const test = (node, parentEl) => {
-  //   console.log("im here");
-  //   let unicClassName = generateClassName();
-  //   let newEl,
-  //     parentName = node.parentNode.nodeName;
-  //   if (parentName && parentName.toLowerCase() === "body") {
-  //     parentEl = document.querySelector(".di-body");
-  //   }
-  //   if (parentName && parentName.toLowerCase() === "html") {
-  //     parentEl = document.querySelector(".di-container");
-  //   }
-  //   if (node.hasChildNodes()) {
-  //     //element has children
-  //     newEl = createSingleBox(node);
-  //     if (".di-body" != parentEl.className) newEl.style.flexWrap = "wrap"; //this line is only for responsive matters
-  //     parentEl.appendChild(newEl);
-  //     parentEl = newEl;
-  //     test(node.children);
-  //   }
-  //   node.classList.add(`di-${unicClassName}`);
-  //   newEl = createSingleBox(node);
-  //   parentEl.appendChild(newEl);
-  // };
 
   const createDomInspectorElelemts = bodyEl => {
     createDomInspectorContainer();
     createDomInspectorContentRecursively(bodyEl);
-    //test(document.body);
   };
 
   //Here the magic happens
