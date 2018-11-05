@@ -195,7 +195,6 @@
   //This recursive function returns an object that represent the dom tree
   //(and also generate a unic classname in order to match dom inspector element with his corresponding dom node)
   const getNodeTree = node => {
-    let unicClassName = generateClassName();
     if (node.hasChildNodes()) {
       const children = [];
       node.childNodes.forEach(n => {
@@ -203,7 +202,8 @@
           children.push(getNodeTree(n));
         }
       });
-      node.classList.add(`di-${unicClassName}`);
+      let unicClassName = generateClassName();
+      node.className = `di-${unicClassName}`;
       return {
         nodeName: node.nodeName,
         className: unicClassName,
