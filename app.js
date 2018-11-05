@@ -289,7 +289,7 @@
   //Here the magic happens
   const createDomInspector = document => {
     try {
-      let bodyTree = getNodeTree(document.body);
+      const bodyTree = getNodeTree(document.body);
       createDomInspectorElelemts(bodyTree);
     } catch (e) {
       console.error("Not a valid HTML");
